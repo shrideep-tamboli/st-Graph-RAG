@@ -83,7 +83,7 @@ def load_graph():
     session = driver.session()
 
     # Initialize the Pyvis Network
-    net = Network()
+    net = Network(bgcolor="#222222", font_color="white")
 
     # Retrieve nodes and relationships
     default_cypher_nodes = "MATCH (n) RETURN n"
@@ -96,7 +96,7 @@ def load_graph():
         node_id = node.element_id
         node_label = node.labels
         node_name = node.get('id', str(node_id))  # Adjust property access based on your data
-        net.add_node(node_id, label=node_name)
+        net.add_node(node_id, label=node_name, color="#FF5733")
 
     # Add edges
     results_rels = session.run(default_cypher_rels)
@@ -107,7 +107,7 @@ def load_graph():
         start_node_id = start_node.element_id
         end_node_id = end_node.element_id
         rel_type = relationship.type
-        net.add_edge(start_node_id, end_node_id, title=rel_type)
+        net.add_edge(start_node_id, end_node_id, title=rel_type,  color="#33C1FF")
 
     # Save the graph to an HTML file
     graph_html_file = "graph.html"
