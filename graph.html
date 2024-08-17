@@ -1,0 +1,155 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "label": "f4c680987062ec862594910ea42e1cc0", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "label": "Elon Musk", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410", "label": "Maye Musk", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411", "label": "Errol Musk", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412", "label": "Kimbal Musk", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:413", "label": "University Of Pennsylvania", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:414", "label": "University Of Pretoria", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:415", "label": "Queen\u0027S University At Kingston", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:416", "label": "Stanford University", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:417", "label": "Spacex", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:418", "label": "Tesla, Inc.", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:419", "label": "X Corp.", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:420", "label": "The Boring Company", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:421", "label": "Neuralink", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:422", "label": "Openai", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:423", "label": "Zip2", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:424", "label": "X.Com", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:425", "label": "Paypal", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:426", "label": "Compaq", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:427", "label": "Ebay", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "label": "c3f3350f1cbfdf13c8dfb0b15f246a98", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:429", "label": "Confinity", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:430", "label": "Tesla Motors, Inc.", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:431", "label": "Solarcity", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:432", "label": "Tesla Energy", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:433", "label": "U.S. Securities And Exchange Commission", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:434", "label": "Twitter", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:435", "label": "Xai", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:436", "label": "Justine Wilson", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:437", "label": "Talulah Riley", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:438", "label": "Grimes", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:439", "label": "Tosca Musk", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:440", "label": "Lyndon Rive", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:441", "label": "216e83848cd6ac881fb8c37d6400125b", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:442", "label": "ba34b043e79d409736e9804ff4a0c92d", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:443", "label": "Pretoria Boys High School", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:444", "label": "Bryanston High School", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:445", "label": "Waterkloof House Preparatory School", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "label": "7a30ac8946f7b09d26075f5d0c7b6427", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:447", "label": "Wharton School", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:448", "label": "Queen\u0027S University", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:449", "label": "Netscape", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:450", "label": "Global Link Information Network", "shape": "dot"}, {"color": "#97c2fc", "id": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:451", "label": "Greg Kouri", "shape": "dot"}]);
+                  edges = new vis.DataSet([{"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:413"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:414"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:415"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:416"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:417"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:418"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:419"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:420"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:421"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:422"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:423"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:424"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:425"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:426"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:408", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:427"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CHILD_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CHILD_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "SIBLING_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "ALUMNI_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:413"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:417"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:420"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:421"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CO-FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:422"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CO-FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:423"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CO-FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:424"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CO-FOUNDER_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:425"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "ACQUIRED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:434"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "FOUNDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:419"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "FOUNDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:435"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "FOUNDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:450"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "INVESTED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:430"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CO-FOUNDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:431"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "ATTENDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:414"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "ATTENDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:415"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "ATTENDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:447"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "ATTENDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:448"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "APPLIED_TO", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:416"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "APPLIED_TO", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:449"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "CEO_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:418"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "MARRIED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:436"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "MARRIED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:437"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "PARTNER", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:438"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "SISTER", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:439"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "COUSIN", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:440"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "EDUCATION", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:443"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "EDUCATION", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:444"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409", "title": "EDUCATION", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:445"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412", "title": "CHILD_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412", "title": "CHILD_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412", "title": "CO-FOUNDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:450"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:423", "title": "ACQUIRED_BY", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:426"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:424", "title": "MERGED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:429"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:424", "title": "FORMED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:425"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:425", "title": "ACQUIRED_BY", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:427"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:417"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:418"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:419"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:420"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:421"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:422"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:424"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:425"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:427"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:429"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:430"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:431"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:432"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:433"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:434"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:435"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:436"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:437"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:438"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:439"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:428", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:440"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:439", "title": "CHILD_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:439", "title": "CHILD_OF", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:441", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:441", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:410"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:441", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:441", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:441", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:439"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:442", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:442", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:411"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:442", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:443"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:442", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:444"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:442", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:445"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:409"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:412"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:413"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:414"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:416"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:423"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:447"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:448"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:449"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:450"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:446", "title": "MENTIONS", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:451"}, {"from": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:451", "title": "CO-FOUNDED", "to": "4:cb8ad7ce-05db-4e5c-a8a4-8a5dee432292:450"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

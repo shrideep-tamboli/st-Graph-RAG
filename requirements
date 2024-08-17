@@ -1,0 +1,12 @@
+streamlit
+langchain
+langchain-community
+langchain-groq
+neo4j
+langchain_groq
+PyPDF2
+tiktoken
+langchain_experimental
+yfiles_jupyter_graphs
+pyvis
+dotenv
