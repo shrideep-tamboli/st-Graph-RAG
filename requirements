@@ -9,4 +9,5 @@ tiktoken
 langchain_experimental
 yfiles_jupyter_graphs
 pyvis
-dotenv
+python-dotenv
+langchain_openai
