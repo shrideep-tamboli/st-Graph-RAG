@@ -57,7 +57,7 @@ def doc2graph(prcoessed_pdf):
     text_chunks = text_splitter.split_text(prcoessed_pdf)
     # Creating a document object
     llm_transformer = LLMGraphTransformer(llm=llm)
-    graph_documents = llm_transformer.convert_to_graph_documents([Document(page_content=chunk) for chunk in text_chunks[:5]])
+    graph_documents = llm_transformer.convert_to_graph_documents([Document(page_content=chunk) for chunk in text_chunks[:10]])
 
     return graph_documents
 
