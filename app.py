@@ -2,7 +2,9 @@ from pyvis.network import Network
 from neo4j import GraphDatabase
 import streamlit as st
 import os
-from dotenv import load_dotenv  
+from dotenv import load_dotenv
+from neo4j.exceptions import SessionExpired  # Import the SessionExpired exception
+import time  # Add this import
 
 load_dotenv()
 # Setup connection to Neo4j database
@@ -16,12 +18,14 @@ NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
 groq_api_key = os.getenv("groq_api_key")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY2')
 
-
 # Setup llm
-#from langchain_groq import ChatGroq
-#llm = ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-70b-versatile")
+from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
-llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo",openai_api_key=OPENAI_API_KEY)
+def initialize_llm(api_key=None, use_openai=True):
+    if use_openai:
+        return ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=api_key)
+    else:
+        return ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-70b-versatile")
 
 # Python object for the connected instance
 kg = Neo4jGraph(
@@ -30,7 +34,6 @@ kg = Neo4jGraph(
     password=NEO4J_PASSWORD,
     database=NEO4J_DATABASE,
 )
-
 
 # Process pdf file to python object
 from PyPDF2 import PdfReader
@@ -42,12 +45,11 @@ def process_pdf(uploaded_pdf):
 
     return file_content
 
-
 # Define a function that takes a document as an argument and return a Knowledge Graph
 from langchain.text_splitter import TokenTextSplitter
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_core.documents import Document
-def doc2graph(prcoessed_pdf):
+def doc2graph(prcoessed_pdf, llm):
     # Splitting texts to create chunks
     text_splitter = TokenTextSplitter(
         chunk_size = 512,
@@ -62,16 +64,29 @@ def doc2graph(prcoessed_pdf):
 
     return graph_documents
 
-
 # Define a function to add the converted KG to AuraDB instance
-def add_nodes(graph_documents):
-    kg.add_graph_documents(
-    graph_documents,
-    baseEntityLabel=True,
-    include_source=True)    
-    num_nodes = kg.query("MATCH (n) RETURN count(n)")
-    return print("Number of Nodes", num_nodes)
+def add_nodes(graph_documents, max_retries=3, retry_delay=5):
+    for attempt in range(max_retries):
+        try:
+            with get_neo4j_connection().session(database=NEO4J_DATABASE) as session:
+                kg.add_graph_documents(
+                    graph_documents,
+                    baseEntityLabel=True,
+                    include_source=True
+                )
+                num_nodes = kg.query("MATCH (n) RETURN count(n)")
+                print("Number of Nodes", num_nodes)
+                return
+        except SessionExpired:
+            print(f"Session expired. Retrying in {retry_delay} seconds...")
+            time.sleep(retry_delay)  # Ensure time.sleep is used correctly
+        except Exception as e:
+            print(f"An error occurred: {e}. Retrying in {retry_delay} seconds...")
+            time.sleep(retry_delay)
+    print("Failed to add nodes after maximum retries.")
 
+def get_neo4j_connection():
+    return GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
 
 # Define a function that clears the KG currently present in the AuraDB instance
 def del_nodes():
@@ -80,7 +95,6 @@ def del_nodes():
   kg.query(del_cypher)
   count_nodes="MATCH (n) RETURN count(n)"
   return print("Number of nodes before", nodes_before_del, "Number of nodes after", kg.query(count_nodes))
-
 
 # Loads graph to be displayed later
 def load_graph():
@@ -133,7 +147,6 @@ def show_graph():
     else:
         st.error("Failed to load the graph.")
 
-
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Neo4jVector
 ## Convert the KG into Vecotr Embeddings
@@ -182,7 +195,8 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-entity_chain = prompt | llm.with_structured_output(Entities)
+def create_entity_chain(llm):
+    return prompt | llm.with_structured_output(Entities)
 
 ## Convert the user queries to cypher
 match_query_nodes = '''MATCH (n)
@@ -221,7 +235,8 @@ from langchain_core.runnables import RunnablePassthrough
 # Generate Cypher statement based on natural language input
 cypher_template = """Based on the Neo4j graph schema below, write a Cypher query that would answer the user's question:
 - Use single quotes (') instead of backticks (`).
-- Ensure the relationship pattern in functions like `shortestPath` is enclosed in parentheses.
+- Ensure the query is not empty.
+- Do not include any Markdown formatting (e.g., no ```cypher blocks).
 {schema}
 Entities in the question map to the following database values:
 {entities_list}
@@ -246,16 +261,17 @@ def get_truncated_schema():
         schema = schema[:MAX_SCHEMA_LENGTH] + "..."  # Indicate truncation
     return schema
 
-cypher_response = (
-    RunnablePassthrough.assign(names=entity_chain)
-    | RunnablePassthrough.assign(
-        entities_list=lambda x: map_to_database(x["names"]),
-        schema=lambda _: get_truncated_schema(),  # Use the truncated schema
+def create_cypher_response_chain(llm):
+    return (
+        RunnablePassthrough.assign(names=create_entity_chain(llm))
+        | RunnablePassthrough.assign(
+            entities_list=lambda x: map_to_database(x["names"]),
+            schema=lambda _: get_truncated_schema(),
+        )
+        | cypher_prompt
+        | llm.bind(stop=["\nCypherResult:"])
+        | StrOutputParser()
     )
-    | cypher_prompt
-    | llm.bind(stop=["\nCypherResult:"])
-    | StrOutputParser()
-)
 
 ## Create a chain using KG|cypher_prompt|LLM
 from langchain.chains.graph_qa.cypher_utils import CypherQueryCorrector, Schema
@@ -284,15 +300,16 @@ response_prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-chain = (
-    RunnablePassthrough.assign(query=cypher_response)
-    | RunnablePassthrough.assign(
-        response=lambda x: kg.query(cypher_validation(x["query"])),
+def create_main_chain(llm):
+    return (
+        RunnablePassthrough.assign(query=create_cypher_response_chain(llm))
+        | RunnablePassthrough.assign(
+            response=lambda x: kg.query(cypher_validation(x["query"])),
+        )
+        | response_prompt
+        | llm
+        | StrOutputParser()
     )
-    | response_prompt
-    | llm
-    | StrOutputParser()
-)
 
 def main():
     st.title("Graph RAG")
@@ -304,34 +321,50 @@ def main():
         st.session_state.user_input = ""
     if "file_processed" not in st.session_state:
         st.session_state.file_processed = False
+    if "llm" not in st.session_state:
+        st.session_state.llm = None
 
     # Upload File
-    uploaded_file = st.file_uploader("Upload file to convert into Knowledge Graph", type=['pdf'])
+    uploaded_file = st.file_uploader("Upload file to convert into Knowledge Graph", type=['pdf'], key="file_uploader")
 
     # Handle file upload
     if uploaded_file is not None:
-        # Check if file has been processed
-        if not st.session_state.file_processed:
-            # As soon as file is uploaded
-            # 1. Call function to delete KG from AuraDB
-            del_nodes()
+        # Toggle switch for choosing between OpenAI and Groq
+        use_openai = st.toggle("Use OpenAI (toggle off for Groq)", value=True)
 
-            # 2. Display a button to load the KG in AuraDB
-            if st.button('Show Graph'):
-                # Show loading spinner while processing and displaying the graph
-                with st.spinner('Loading graph...'):
-                    # Process the uploaded PDF to python object
-                    processed_pdf = process_pdf(uploaded_file)
-                    # Convert the processed pdf to Knowledge Graph
-                    graph_doc = doc2graph(processed_pdf)
-                    # Add the graph document
-                    add_nodes(graph_doc)
-                    # Load and store the graph in session state
-                    st.session_state.graph_html_file = load_graph()
-                    st.session_state.file_processed = True
+        proceed = False
+        user_api_key = None
+
+        if use_openai:
+            user_api_key = st.text_input("Enter your OpenAI API key:", type="password")
+            if user_api_key:
+                proceed = True
+            else:
+                st.warning("Please enter your OpenAI API key to proceed.")
+        else:
+            if groq_api_key:
+                proceed = True
+            else:
+                st.error("Groq API key is not set in the environment variables.")
+
+        if proceed:
+            # Initialize LLM
+            if st.session_state.llm is None:
+                st.session_state.llm = initialize_llm(user_api_key, use_openai)
+
+            # Show the "Show Graph" button
+            if not st.session_state.file_processed:
+                if st.button('Show Graph'):
+                    with st.spinner('Loading graph...'):
+                        del_nodes()
+                        processed_pdf = process_pdf(uploaded_file)
+                        graph_doc = doc2graph(processed_pdf, st.session_state.llm)
+                        add_nodes(graph_doc)  # This now includes retry logic
+                        st.session_state.graph_html_file = load_graph()
+                        st.session_state.file_processed = True
 
     # Display the graph if it's available in session state
-    if st.session_state.graph_html_file:
+    if st.session_state.graph_html_file and st.session_state.llm:
         st.title("Knowledge Graph")
         # Load and display the graph from the stored HTML file
         with open(st.session_state.graph_html_file, "r") as f:
@@ -348,7 +381,8 @@ def main():
 
         # Display the input after the user submits it
         if st.session_state.user_input:
-            # Execute the chain for hybrid RAG
+            # Create the chain using the LLM from session state
+            chain = create_main_chain(st.session_state.llm)
             response = chain.invoke({"question": st.session_state.user_input})
             st.write(response)
 
