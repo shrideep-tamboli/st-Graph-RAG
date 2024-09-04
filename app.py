@@ -4,7 +4,9 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 from neo4j.exceptions import SessionExpired  # Import the SessionExpired exception
-import time  # Add this import
+# import time  # Add this import
+from langsmith import traceable
+from langsmith.wrappers import wrap_openai
 
 load_dotenv()
 # Setup connection to Neo4j database
@@ -17,13 +19,16 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
 groq_api_key = os.getenv("groq_api_key")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY2')
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+#LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 
 # Setup llm
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 def initialize_llm(api_key=None, use_openai=True):
     if use_openai:
-        return ChatOpenAI(temperature=0, model_name="gpt-4o", openai_api_key=api_key)
+        return ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo", openai_api_key=api_key)
     else:
         return ChatGroq(groq_api_key=groq_api_key, model_name="llama-3.1-70b-versatile")
 
@@ -49,6 +54,7 @@ def process_pdf(uploaded_pdf):
 from langchain.text_splitter import TokenTextSplitter
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_core.documents import Document
+
 def doc2graph(prcoessed_pdf, llm):
     # Splitting texts to create chunks
     text_splitter = TokenTextSplitter(
@@ -64,26 +70,15 @@ def doc2graph(prcoessed_pdf, llm):
 
     return graph_documents
 
-# Define a function to add the converted KG to AuraDB instance
-def add_nodes(graph_documents, max_retries=3, retry_delay=5):
-    for attempt in range(max_retries):
-        try:
-            with get_neo4j_connection().session(database=NEO4J_DATABASE) as session:
-                kg.add_graph_documents(
-                    graph_documents,
-                    baseEntityLabel=True,
-                    include_source=True
-                )
-                num_nodes = kg.query("MATCH (n) RETURN count(n)")
-                print("Number of Nodes", num_nodes)
-                return
-        except SessionExpired:
-            print(f"Session expired. Retrying in {retry_delay} seconds...")
-            time.sleep(retry_delay)  # Ensure time.sleep is used correctly
-        except Exception as e:
-            print(f"An error occurred: {e}. Retrying in {retry_delay} seconds...")
-            time.sleep(retry_delay)
-    print("Failed to add nodes after maximum retries.")
+def add_nodes(graph_documents):
+    with get_neo4j_connection().session(database=NEO4J_DATABASE) as session:
+        kg.add_graph_documents(
+            graph_documents,
+            baseEntityLabel=True,
+            include_source=True
+        )
+        num_nodes = kg.query("MATCH (n) RETURN count(n)")
+        print("Number of Nodes", num_nodes)
 
 def get_neo4j_connection():
     return GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))

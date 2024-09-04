@@ -11,3 +11,5 @@ yfiles_jupyter_graphs
 pyvis
 python-dotenv
 langchain_openai
+langsmith
+langchain_core
