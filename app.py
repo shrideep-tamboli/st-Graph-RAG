@@ -325,7 +325,7 @@ def main():
     # Handle file upload
     if uploaded_file is not None:
         # Toggle switch for choosing between OpenAI and Groq
-        use_openai = st.toggle("Use OpenAI (toggle off for Groq)", value=True)
+        use_openai = st.toggle("Use OpenAI (toggle off for Llama-3.1)", value=True)
 
         proceed = False
         user_api_key = None
