@@ -21,7 +21,7 @@ groq_api_key = os.getenv("groq_api_key")
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY2')
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 #LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
-os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
+LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
 
 # Setup llm
 from langchain_groq import ChatGroq
